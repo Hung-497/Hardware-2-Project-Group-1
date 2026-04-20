@@ -16,9 +16,11 @@ class Processing:
         self.sample_count = 0
         self.sma_buffer = []
         self.SMA_WINDOW = 5
+        self.bpm_list = []
 
     def process_sample(self, raw_value):
         # sliding window
+        start = time.ticks_ms()
         self.sma_buffer.append(raw_value)
         if len(self.sma_buffer) > self.SMA_WINDOW:
             self.sma_buffer.pop(0)
@@ -56,7 +58,7 @@ class Processing:
 
             self.beat_intervals.put(interval)
             self.intervals_sum += interval
-
+            
             mean_interval = self.intervals_sum / self.intervals_count
             if mean_interval > 0:
                 calculated_bpm = int(60000 / mean_interval)
