@@ -42,10 +42,23 @@ class Processing:
         # verify crossing the threshold
         if self.threshold is not None and self.prev_val < self.threshold and value >= self.threshold:
             now = time.ticks_ms()
+            is_beat = True
+
+            # #Detect the first beat 
             if self.last_beat_time == 0:
                 self.last_beat_time = now
-            is_beat = True
+                self.prev_val = value
+                return is_beat
             interval = time.ticks_diff(now, self.last_beat_time)
+            lasted_filtered = value
+            lasted_raw = raw_value
+
+            # #detect invalid intervals (too short or too long)
+            if interval < 300 or interval > 2000: #300 - 2000 ms
+                print(lasted_raw, lasted_filtered)
+                self.last_beat_time = now
+                self.prev_val = value
+                return False
 
             # Keep moving average of intervals inside the FIFO
             if self.intervals_count == 5:
@@ -63,7 +76,6 @@ class Processing:
                 # check possibility
                 if 40 <= calculated_bpm <= 220:
                     self.bpm = calculated_bpm
-                    print(f"Beat detected! BPM: {self.bpm}")
 
             self.last_beat_time = now
 
