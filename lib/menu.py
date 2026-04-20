@@ -32,7 +32,7 @@ class Menu:
                 hw.oled.text("BY PRESSING", 0, 25)
                 hw.oled.text("THE BUTTON", 0, 40)
                 hw.oled.show()
-                print("")
+                print("Not working")
         else:
             # measuring screen update every 1 sec
             if time.ticks_diff(now, self.last_ui_update) >= 1000 or self.force_refresh:

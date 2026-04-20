@@ -33,13 +33,17 @@ class Processing:
             self.cur_max = value
 
         # recalibrate every 2 sec
-        if self.sample_count >= 2000:
+        if self.sample_count >= 500:
             self.threshold = (self.cur_max + self.cur_min) / 2
             self.sample_count = 0
+            self.cur_min = 65535
+            self.cur_max = 0
 
         # verify crossing the threshold
         if self.threshold is not None and self.prev_val < self.threshold and value >= self.threshold:
             now = time.ticks_ms()
+            if self.last_beat_time == 0:
+                self.last_beat_time = now
             is_beat = True
             interval = time.ticks_diff(now, self.last_beat_time)
 
@@ -59,6 +63,7 @@ class Processing:
                 # check possibility
                 if 40 <= calculated_bpm <= 220:
                     self.bpm = calculated_bpm
+                    print(f"Beat detected! BPM: {self.bpm}")
 
             self.last_beat_time = now
 
