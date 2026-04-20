@@ -27,7 +27,8 @@ TIMEOUT_MS = 15000
 
 
 class KubiosExample:
-    def __init__(self):
+    def __init__(self, bpm_data):
+        self.bpm_data = bpm_data
         # This variable will store the latest valid MQTT response
         # that arrives from kubios/response.
         self.latest_response = None
@@ -80,10 +81,7 @@ class KubiosExample:
         return {
             "mac": mac_address,
             "type": "RRI",
-            "data": [
-                828, 836, 852, 760, 800, 796, 856, 824, 808, 776,
-                724, 816, 800, 812, 812, 812, 756, 820, 812, 800
-            ],
+            "data": self.bpm_data,
             "analysis": {"type": "readiness"}
         }
 
@@ -156,5 +154,3 @@ class KubiosExample:
         print("Done.")
 
 
-# Create the example object and run the full process.
-KubiosExample().run()
