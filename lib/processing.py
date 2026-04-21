@@ -7,6 +7,7 @@ class Processing:
         self.cur_min = 65535
         self.cur_max = 0
         self.threshold = None
+        self.threshold_up = None
         self.prev_val = 65535
         self.last_beat_time = None
         self.beat_intervals = Fifo(6, typecode='i')
@@ -38,15 +39,17 @@ class Processing:
 
         # recalibrate every 2 sec
         if self.sample_count >= 500:
+            signal_range = self.cur_max - self.cur_min
+            self.threshold_up = self.cur_min + 0.7 * signal_range
             self.threshold = (self.cur_max + self.cur_min) / 2
             self.sample_count = 0
             self.cur_min = 65535
             self.cur_max = 0
 
-        # verify crossing the threshold
-        if self.threshold is not None and self.prev_val < self.threshold and filtered_val >= self.threshold:
-            now = time.ticks_ms()
+        now = time.ticks_ms()
 
+        # verify crossing the threshold
+        if self.threshold_up is not None and self.prev_val < self.threshold_up and filtered_val >= self.threshold_up:
             # Detect the first beat 
             if self.last_beat_time is None:
                 self.last_beat_time = now
