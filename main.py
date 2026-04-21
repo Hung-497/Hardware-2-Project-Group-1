@@ -30,6 +30,7 @@ class Main:
                 while not sampler.empty():
                     val = sampler.get()
                     is_beat = processor.process_sample(val)
+                    print(sampler.adc.read_u16(), processor.bpm, processor.threshold_up)
 
                     # if heart beats, toggle led
                     if is_beat:

@@ -50,8 +50,14 @@ class Processing:
         # recalibrate every 2 sec
         if self.sample_count >= 500:
             signal_range = self.cur_max - self.cur_min
-            self.threshold_up = self.cur_min + 0.7 * signal_range
-            self.threshold = (self.cur_max + self.cur_min) / 2
+            if signal_range > 80:
+                new_threshold = self.cur_min + 0.7 * signal_range
+
+                if self.threshold_up is None:
+                    self.threshold_up = new_threshold
+                else:
+                    self.threshold_up = 0.8 * self.threshold_up + 0.2 * new_threshold
+
             self.sample_count = 0
             self.cur_min = 65535
             self.cur_max = 0
@@ -72,7 +78,7 @@ class Processing:
                 self.prev_val = filtered_val
                 return False
 
-            if interval > 2000:
+            if interval > 1500:
                 self.last_beat_time = now
                 self.prev_val = filtered_val
                 return False
@@ -80,7 +86,7 @@ class Processing:
             is_beat = True
             
             # Keep moving average of intervals inside the FIFO
-            if self.intervals_count == 5:
+            if self.intervals_count >= 5:
                 old_interval = self.beat_intervals.get()
                 self.intervals_sum -= old_interval
             else:
@@ -94,8 +100,10 @@ class Processing:
                 calculated_bpm = int(60000 / mean_ppi)
                 # check possibility
                 if 40 <= calculated_bpm <= 220:
-                    self.bpm = calculated_bpm
-                    print(f'Heart rate: {self.bpm} bpm')
+                    if self.bpm == 0:
+                        self.bpm = calculated_bpm
+                    else:
+                        self.bpm = int(0.8 * self.bpm + 0.2 * calculated_bpm)
 
             if self.collecting_30s:
                 self.bpm_list.append(interval)
