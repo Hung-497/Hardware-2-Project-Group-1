@@ -42,26 +42,28 @@ class Processing:
         # verify crossing the threshold
         if self.threshold is not None and self.prev_val < self.threshold and value >= self.threshold:
             now = time.ticks_ms()
-            is_beat = True
 
-            # #Detect the first beat 
+            # Detect the first beat 
             if self.last_beat_time == 0:
                 self.last_beat_time = now
                 self.prev_val = value
                 return is_beat
             interval = time.ticks_diff(now, self.last_beat_time)
-            lasted_filtered = value
-            lasted_raw = raw_value
 
-            # #detect invalid intervals (too short or too long)
-            if interval < 300 or interval > 2000: #300 - 2000 ms
-                print(lasted_raw, lasted_filtered)
+            # detect invalid intervals (too short or too long)
+            if interval < 300:
+                self.prev_val = value
+                return False
+
+            if interval > 2000:
                 self.last_beat_time = now
                 self.prev_val = value
                 return False
 
+            is_beat = True
+            
             # Keep moving average of intervals inside the FIFO
-            if self.intervals_count == 5:
+            if self.intervals_count == 6:
                 old_interval = self.beat_intervals.get()
                 self.intervals_sum -= old_interval
             else:
@@ -70,12 +72,13 @@ class Processing:
             self.beat_intervals.put(interval)
             self.intervals_sum += interval
 
-            mean_interval = self.intervals_sum / self.intervals_count
-            if mean_interval > 0:
-                calculated_bpm = int(60000 / mean_interval)
+            mean_ppi = self.intervals_sum / self.intervals_count
+            if mean_ppi > 0:
+                calculated_bpm = int(60000 / mean_ppi)
                 # check possibility
                 if 40 <= calculated_bpm <= 220:
                     self.bpm = calculated_bpm
+                    print(f'Heart rate: {self.bpm} bpm')
 
             self.last_beat_time = now
 
