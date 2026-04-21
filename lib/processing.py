@@ -67,7 +67,7 @@ class Processing:
             is_beat = True
             
             # Keep moving average of intervals inside the FIFO
-            if self.intervals_count == 6:
+            if self.intervals_count == 5:
                 old_interval = self.beat_intervals.get()
                 self.intervals_sum -= old_interval
             else:
