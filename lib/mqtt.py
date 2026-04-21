@@ -5,29 +5,12 @@ import ubinascii
 from umqtt.simple import MQTTClient
 
 
-# Wi-Fi and broker settings.
-# Replace these with your own course/lab values before running the program.
-SSID = "KME759_G1"
-PASSWORD = "123456789"
-BROKER_IP = "192.168.1.253"
-BROKER_PORT = 21883
-
-# MQTT topics used by the Kubios proxy.
-# We publish the request to kubios/request
-# and listen for the reply on kubios/response.
-REQUEST_TOPIC = b"kubios/request"
-RESPONSE_TOPIC = b"kubios/response"
-
-# Name of the file where the latest Kubios response will be saved on the Pico.
-# If the program is run again, this file will be overwritten with the new result.
-OUTPUT_FILE = "kubios_response.json"
-
-# Maximum waiting time for a Kubios reply, in milliseconds.
-TIMEOUT_MS = 15000
+from config import Value
 
 
 class KubiosExample:
     def __init__(self, bpm_data):
+        self.cfg = Value()
         self.bpm_data = bpm_data
         # This variable will store the latest valid MQTT response
         # that arrives from kubios/response.
@@ -38,7 +21,7 @@ class KubiosExample:
         # a subscribed MQTT message arrives.
 
         # Ignore messages from any topic other than kubios/response.
-        if topic != RESPONSE_TOPIC:
+        if topic != self.cfg.RESPONSE_TOPIC:
             return
 
         try:
@@ -56,11 +39,11 @@ class KubiosExample:
         # Connect only if not already connected.
         if not wlan.isconnected():
             print("Connecting to Wi-Fi...")
-            wlan.connect(SSID, PASSWORD)
+            wlan.connect(self.cfg.SSID, self.cfg.PASSWORD)
 
             # Keep waiting until the Pico successfully connects.
             while not wlan.isconnected():
-                time.sleep_ms(250)
+                pass
 
         # Show the Pico's local IP address after connection.
         print("Wi-Fi connected:", wlan.ifconfig()[0])
@@ -105,14 +88,15 @@ class KubiosExample:
         real_mac = self.get_pico_mac(wlan)
 
         # Step 3: Create the MQTT client and connect it to the broker.
-        client = MQTTClient(client_id=real_mac, server=BROKER_IP, port=BROKER_PORT)
+        client = MQTTClient(
+            client_id=real_mac, server=self.cfg.BROKER_IP, port=self.cfg.BROKER_PORT)
 
         # Register the callback function for incoming MQTT messages.
         client.set_callback(self.mqtt_callback)
 
         # Connect to the broker and subscribe to the Kubios response topic.
         client.connect()
-        client.subscribe(RESPONSE_TOPIC)
+        client.subscribe(self.cfg.RESPONSE_TOPIC)
 
         # Clear any old stored response before sending a new request.
         self.latest_response = None
@@ -123,7 +107,7 @@ class KubiosExample:
         # Publish the request to kubios/request.
         print("Published to kubios/request")
         print(json.dumps(request_payload))
-        client.publish(REQUEST_TOPIC, json.dumps(request_payload))
+        client.publish(self.cfg.REQUEST_TOPIC, json.dumps(request_payload))
 
         # Save the current time so we can stop waiting after TIMEOUT_MS.
         start = time.ticks_ms()
@@ -138,19 +122,16 @@ class KubiosExample:
                 print("Response received:")
                 print(json.dumps(self.latest_response))
 
-                self.save_json_to_pico(OUTPUT_FILE, self.latest_response)
-                print("Saved to file:", OUTPUT_FILE)
+                self.save_json_to_pico(
+                    self.cfg.OUTPUT_FILE, self.latest_response)
+                print("Saved to file:", self.cfg.OUTPUT_FILE)
                 break
 
             # Stop waiting if the timeout is exceeded.
-            if time.ticks_diff(time.ticks_ms(), start) > TIMEOUT_MS:
-                raise RuntimeError("Timed out while waiting for kubios/response")
-
-            # Small delay so the loop does not run too aggressively.
-            time.sleep_ms(200)
+            if time.ticks_diff(time.ticks_ms(), start) > self.cfg.TIMEOUT_MS:
+                raise RuntimeError(
+                    "Timed out while waiting for kubios/response")
 
         # Disconnect cleanly after the work is done.
         client.disconnect()
         print("Done.")
-
-

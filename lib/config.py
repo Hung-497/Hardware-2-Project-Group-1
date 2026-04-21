@@ -10,3 +10,11 @@ class Value:
         self.BUTTON_PIN = 12
         self.OLED_WIDTH = 128
         self.OLED_HIGHT = 64
+        self.SSID = "KME759_G1"
+        self.PASSWORD = "123456789"
+        self.BROKER_IP = "192.168.1.253"
+        self.BROKER_PORT = 21883
+        self.REQUEST_TOPIC = b"kubios/request"
+        self.RESPONSE_TOPIC = b"kubios/response"
+        self.OUTPUT_FILE = "kubios_response.json"
+        self.TIMEOUT_MS = 15000
