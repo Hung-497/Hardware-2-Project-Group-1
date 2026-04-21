@@ -18,3 +18,6 @@ class Value:
         self.RESPONSE_TOPIC = b"kubios/response"
         self.OUTPUT_FILE = "kubios_response.json"
         self.TIMEOUT_MS = 15000
+        self.DB_TOPIC = b"database/hrv"
+        self.PATIENT_NAME = "Patient1"
+        self.HISTORY_FILE = "history.json"
