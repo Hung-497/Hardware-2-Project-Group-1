@@ -17,6 +17,16 @@ class Processing:
         self.sample_count = 0
         self.sma_buffer = []
         self.SMA_WINDOW = 5
+        self.bpm_list = []
+        self.collecting_30s = False
+        self.collection_start = 0
+        self.collection_complete = False
+
+    def start_collection(self):
+        self.bpm_list = []
+        self.collecting_30s = True
+        self.collection_complete = False
+        self.collection_start = time.ticks_ms()
 
     def sma_update(self, buffer, sample):
         buffer.append(sample)
@@ -86,6 +96,13 @@ class Processing:
                 if 40 <= calculated_bpm <= 220:
                     self.bpm = calculated_bpm
                     print(f'Heart rate: {self.bpm} bpm')
+
+            if self.collecting_30s:
+                self.bpm_list.append(interval)
+                # check 30 second
+                if time.ticks_diff(now, self.collection_start) >= 30000:
+                    self.collecting_30s = False
+                    self.collection_complete = True
 
             self.last_beat_time = now
 
