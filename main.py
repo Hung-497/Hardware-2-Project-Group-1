@@ -43,7 +43,7 @@ class Main:
 
                         try:
                             from mqtt import KubiosExample
-                            mqtt_client = KubiosExample(processor.bpm_list)
+                            mqtt_client = KubiosExample(processor.bpm_list,processor.bpm)
                             mqtt_client.run()
                         except Exception as e:
                             print("kubios failed:", e)
