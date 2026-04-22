@@ -10,3 +10,6 @@ class Value:
         self.BUTTON_PIN = 12
         self.OLED_WIDTH = 128
         self.OLED_HIGHT = 64
+        self.ENCODER_A_PIN = 10
+        self.ENCODER_B_PIN = 11
+        self.ENCODER_SW_PIN = 9
