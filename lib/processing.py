@@ -54,12 +54,13 @@ class Processing:
         # update threshold every 2 seconds at 250 Hz
         if self.sample_count >= 500:
             signal_range = self.cur_max - self.cur_min
-            new_threshold = self.cur_min + 0.6 * signal_range
+            if 100 < signal_range < 6000:
+                new_threshold = self.cur_min + 0.6 * signal_range
 
-            if self.threshold_up is None:
-                self.threshold_up = new_threshold
-            else:
-                self.threshold_up = 0.7 * self.threshold_up + 0.3 * new_threshold
+                if self.threshold_up is None:
+                    self.threshold_up = new_threshold
+                else:
+                    self.threshold_up = 0.7 * self.threshold_up + 0.3 * new_threshold
 
             print(signal_range, self.cur_min, self.cur_max, self.threshold_up, self.bpm)
 
@@ -67,11 +68,7 @@ class Processing:
             self.cur_min = 65535
             self.cur_max = 0
 
-        if (
-            self.threshold_up is not None
-            and self.prev_val < self.threshold_up
-            and filtered_val >= self.threshold_up
-        ):
+        if (self.threshold_up is not None and self.prev_val < self.threshold_up and filtered_val >= self.threshold_up):
             now = time.ticks_ms()
 
             if self.last_beat_time is None:
