@@ -10,7 +10,7 @@ class Processing:
         self.prev_val = 65535
         self.last_beat_time = None
 
-        self.beat_intervals = Fifo(7, typecode='i')
+        self.beat_intervals = Fifo(6, typecode='i')
         self.intervals_sum = 0
         self.intervals_count = 0
 
@@ -91,7 +91,7 @@ class Processing:
             is_beat = True
             
             # Keep moving average of intervals inside the FIFO
-            if self.intervals_count >= 6:
+            if self.intervals_count >= 5:
                 old_interval = self.beat_intervals.get()
                 self.intervals_sum -= old_interval
             else:
