@@ -6,17 +6,20 @@ class Processing:
     def __init__(self):
         self.cur_min = 65535
         self.cur_max = 0
-        self.threshold = None
         self.threshold_up = None
         self.prev_val = 65535
         self.last_beat_time = None
-        self.beat_intervals = Fifo(6, typecode='i')
+
+        self.beat_intervals = Fifo(7, typecode='i')
         self.intervals_sum = 0
         self.intervals_count = 0
+
         self.bpm = 0
         self.sample_count = 0
+
         self.sma_buffer = []
         self.SMA_WINDOW = 5
+
         self.bpm_list = []
         self.collecting_30s = False
         self.collection_start = 0
@@ -50,7 +53,8 @@ class Processing:
         # recalibrate every 2 sec
         if self.sample_count >= 500:
             signal_range = self.cur_max - self.cur_min
-            if signal_range > 80:
+            print(signal_range, self.cur_min, self.cur_max)
+            if 100 <= signal_range <= 1000:
                 new_threshold = self.cur_min + 0.7 * signal_range
 
                 if self.threshold_up is None:
@@ -71,6 +75,7 @@ class Processing:
                 self.last_beat_time = now
                 self.prev_val = filtered_val
                 return False
+            
             interval = time.ticks_diff(now, self.last_beat_time)
 
             # detect invalid intervals (too short or too long)
@@ -86,7 +91,7 @@ class Processing:
             is_beat = True
             
             # Keep moving average of intervals inside the FIFO
-            if self.intervals_count >= 5:
+            if self.intervals_count >= 6:
                 old_interval = self.beat_intervals.get()
                 self.intervals_sum -= old_interval
             else:
