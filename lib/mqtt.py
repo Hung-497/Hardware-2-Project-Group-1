@@ -21,6 +21,8 @@ class KubiosExample:
     def mqtt_callback(self, topic, msg):
         if topic == self.cfg.RESPONSE_TOPIC:
             self.latest_response = json.loads(msg)
+        elif topic == self.cfg.DB_RESPONSE_TOPIC:
+            self.latest_db_response = json.loads(msg)
 
     def connect_wifi(self):
         # Create the Pico W Wi-Fi interface in station mode.
