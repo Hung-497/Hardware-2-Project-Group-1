@@ -13,3 +13,15 @@ class Value:
         self.ENCODER_A_PIN = 10
         self.ENCODER_B_PIN = 11
         self.ENCODER_SW_PIN = 9
+        self.SSID = "KME759_G1"
+        self.PASSWORD = "123456789"
+        self.BROKER_IP = "192.168.1.253"
+        self.BROKER_PORT = 21883
+        self.REQUEST_TOPIC = b"kubios/request"
+        self.RESPONSE_TOPIC = b"kubios/response"
+        self.OUTPUT_FILE = "kubios_response.json"
+        self.TIMEOUT_MS = 15000
+        self.DB_TOPIC = b"database/records/add"
+        self.PATIENT_NAME = "Patient1"
+        self.PATIENT_REGISTER_TOPIC = b"database/patients/add"
+        self.DB_RESPONSE_TOPIC = b"database/response"
