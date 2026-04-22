@@ -1,23 +1,26 @@
+from Rotary import Encoder
 from hardware import hw
 import time
 import micropython
 micropython.alloc_emergency_exception_buf(200)
+from config import Value
 
 
 class Menu:
     def __init__(self):
         self.measuring = False
         self.last_btn_press = 0
-        hw.button.irq(handler=self.btn_handler, trigger=hw.button.IRQ_FALLING, hard=True)
+        hw.button.irq(handler=self.btn_handler,
+                      trigger=hw.button.IRQ_FALLING, hard=True)
 
         self.last_ui_update = 0
         self.display_bpm = 0
         self.force_refresh = True
         self.anime_tick = 0
 
-        #menu, measure = 1, data = 2, history n kubios should be 3 n 4 but will add later
-        self.screen = "menu"              
-        self.menu_option = 1              
+        # menu, measure = 1, data = 2, history n kubios should be 3 n 4 but will add later
+        self.screen = "menu"
+        self.menu_option = 1
 
         # time cho HRV
         self.hrv_start_time = 0
@@ -27,6 +30,10 @@ class Menu:
         self.mean_ppi = 750
         self.rmssd = 23
         self.sdnn = 22
+        self.cfg = Value()
+
+        # rotary encoder
+        self.rotary_encoder = Encoder(self.cfg.ENCODER_A_PIN,self.cfg.ENCODER_B_PIN)
 
     def btn_handler(self, pin):
         now = time.ticks_ms()
@@ -69,8 +76,8 @@ class Menu:
 
     def read_encoder(self):
         steps = 0
-        while hw.encoder.fifo.has_data():
-            steps += hw.encoder.fifo.get()
+        while self.rotary_encoder.fifo.has_data():
+            steps += self.rotary_encoder.fifo.get()
         return steps
 
     def update_menu(self):
@@ -91,7 +98,7 @@ class Menu:
 
         # demo time
         if self.screen == "hrv_collect":
-            
+
             if time.ticks_diff(now, self.hrv_start_time) >= 30000:
                 self.screen = "hrv_send"
                 self.measuring = False
@@ -133,7 +140,6 @@ class Menu:
         hw.oled.text("PRESS BUTTON", 12, 42)
         hw.oled.text("TO STOP", 32, 54)
         hw.oled.show()
-        
 
     def draw_hrv_ready(self):
         hw.oled.fill(0)
