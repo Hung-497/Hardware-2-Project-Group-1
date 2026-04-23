@@ -110,6 +110,13 @@ class Menu:
                 self.screen = "hrv_result"
                 self.measuring = False
                 self.force_refresh = True
+                
+                try:
+                    from storage import Storage
+                    Storage().save_hrv_data()
+                    print("save history")
+                except Exception as e:
+                    print("Error saving locally", e)
 
     def draw_menu(self):
         hw.oled.fill(0)
