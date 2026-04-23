@@ -69,7 +69,6 @@ class Processing:
         is_beat = False
         self.sample_count += 1
 
-        # find max min
         if filtered_val < self.cur_min:
             self.cur_min = filtered_val
         if filtered_val > self.cur_max:
@@ -92,11 +91,9 @@ class Processing:
             self.cur_min = 65535
             self.cur_max = 0
 
-        now = time.ticks_ms()
+        if (self.threshold_up is not None and self.prev_val < self.threshold_up and filtered_val >= self.threshold_up):
+            now = time.ticks_ms()
 
-        # verify crossing the threshold
-        if self.threshold_up is not None and self.prev_val < self.threshold_up and filtered_val >= self.threshold_up:
-            # Detect the first beat 
             if self.last_beat_time is None:
                 self.last_beat_time = now
                 self.prev_val = filtered_val
@@ -114,8 +111,7 @@ class Processing:
                 return False
 
             is_beat = True
-            
-            # Keep moving average of intervals inside the FIFO
+
             if self.intervals_count >= 6:
                 old_interval = self.beat_intervals.get()
                 self.intervals_sum -= old_interval
@@ -128,16 +124,11 @@ class Processing:
             mean_ppi = self.intervals_sum / self.intervals_count
             if mean_ppi > 0:
                 calculated_bpm = int(60000 / mean_ppi)
-                # check possibility
                 if 40 <= calculated_bpm <= 220:
-                    if self.bpm == 0:
-                        self.bpm = calculated_bpm
-                    else:
-                        self.bpm = int(0.8 * self.bpm + 0.2 * calculated_bpm)
+                    self.bpm = calculated_bpm
 
             if self.collecting_30s:
                 self.bpm_list.append(interval)
-                # check 30 second
                 if time.ticks_diff(now, self.collection_start) >= 30000:
                     self.collecting_30s = False
                     self.collection_complete = True
