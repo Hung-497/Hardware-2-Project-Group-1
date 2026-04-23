@@ -223,7 +223,7 @@ class Menu:
         now = time.ticks_ms()
 
         self.update_menu()
-        self.update_hrv_state()
+        self.update_hrv_state()11
 
         # update screen
         if time.ticks_diff(now, self.last_ui_update) >= 80 or self.force_refresh:
