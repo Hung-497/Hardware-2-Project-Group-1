@@ -29,6 +29,7 @@ class Processing:
         self.MIN_INTERVAL = 450
         self.MAX_INTERVAL = 1500
 
+        self.mean_interval = 0
         self.mean_hr = 0
         self.rmssd_val = 0
         self.sdnn_val = 0
@@ -40,6 +41,7 @@ class Processing:
         self.collection_start = time.ticks_ms()
 
         self.mean_hr = 0
+        self.mean_interval = 0
         self.rmssd_val = 0
         self.sdnn_val = 0
 
@@ -133,10 +135,11 @@ class Processing:
 
                     # calculate mean HR + mean PPI for kubios
                     if len(self.bpm_list) > 0:
-                        mean_interval = sum(self.bpm_list) / len(self.bpm_list)
-                        self.mean_hr = int(60000 / mean_interval)
+                        self.mean_interval = sum(self.bpm_list) / len(self.bpm_list)
+                        self.mean_hr = int(60000 / self.mean_interval)
                     else:
                         self.mean_hr = 0
+                        self.mean_interval = 0
 
                     # calculate RMSSD for kubios
                     if len(self.bpm_list) >= 2:
@@ -153,13 +156,13 @@ class Processing:
 
                     # calculate SDNN for kubios
                     if len(self.bpm_list) >= 2:
-                        mean_interval = sum(self.bpm_list) / len(self.bpm_list)
                         squared_diff_sum = 0
 
                         for i in range(len(self.bpm_list)):
-                            diff = self.bpm_list[i] - mean_interval
+                            diff = self.bpm_list[i] - self.mean_interval
                             squared_diff_sum += diff * diff
-                        mean_squared_diff = squared_diff_sum / (len(self.bpm_list))
+
+                        mean_squared_diff = squared_diff_sum / len(self.bpm_list)
                         self.sdnn_val = mean_squared_diff ** 0.5
                     else:
                         self.sdnn_val = 0
