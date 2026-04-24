@@ -217,6 +217,23 @@ class Menu:
         hw.oled.text("PRESS TO SELECT", 4, 54)
         hw.oled.show()
 
+    def draw_user_select(self):
+        hw.oled.fill(0)
+        hw.oled.text("SELECT USER", 20, 0)
+
+        names = self.user_manager.get_all_names()
+        idx = self.user_manager.get_index()
+
+        for i, name in enumerate(names):
+            y = 20 + (i * 12)
+            if idx == i:
+                hw.oled.text(f"> {name}", 20, y)
+            else:
+                hw.oled.text(f"  {name}", 20, y)
+
+        hw.oled.text("PRESS TO SELECT", 4, 54)
+        hw.oled.show()
+
     def draw_basic_hr(self, current_bpm, disp):
         self.display_bpm = current_bpm
         self.anime_tick += 1
