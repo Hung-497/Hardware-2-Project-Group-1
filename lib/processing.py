@@ -21,7 +21,7 @@ class Processing:
         self.sma_buffer = []
         self.SMA_WINDOW = 5
 
-        self.bpm_list = []  #store beat intervals for 30s collection
+        self.bpm_list = []  # store beat intervals for 30s collection
         self.collecting_30s = False
         self.collection_start = 0
         self.collection_complete = False
@@ -87,7 +87,8 @@ class Processing:
                 else:
                     self.threshold_up = 0.7 * self.threshold_up + 0.3 * new_threshold
 
-            print(signal_range, self.cur_min, self.cur_max, self.threshold_up, self.bpm)
+            print(signal_range, self.cur_min, self.cur_max,
+                  self.threshold_up, self.bpm)
 
             self.sample_count = 0
             self.cur_min = 65535
@@ -96,7 +97,7 @@ class Processing:
         # verify crossing the threshold
         if (self.threshold_up is not None and self.prev_val < self.threshold_up and filtered_val >= self.threshold_up):
             now = time.ticks_ms()
-            
+
             # include the first beat
             if self.last_beat_time is None:
                 self.last_beat_time = now
@@ -136,46 +137,43 @@ class Processing:
 
             if self.collecting_30s:
                 self.bpm_list.append(interval)
-                # check 30s
-                if time.ticks_diff(now, self.collection_start) >= 30000:
-                    self.collecting_30s = False
-                    self.collection_complete = True
-
-                    # calculate mean HR + mean PPI for kubios
-                    if len(self.bpm_list) > 0:
-                        self.mean_interval = sum(self.bpm_list) / len(self.bpm_list)
-                        self.mean_hr = int(60000 / self.mean_interval)
-                    else:
-                        self.mean_hr = 0
-                        self.mean_interval = 0
-
-                    # calculate RMSSD for kubios
-                    if len(self.bpm_list) >= 2:
-                        squared_diff_sum = 0
-
-                        for i in range(len(self.bpm_list)-1):
-                            diff = self.bpm_list[i+1] - self.bpm_list[i]
-                            squared_diff_sum += diff * diff
-                        
-                        mean_squared_diff = squared_diff_sum / (len(self.bpm_list) - 1) 
-                        self.rmssd_val = mean_squared_diff ** 0.5
-                    else:
-                        self.rmssd_val = 0
-
-                    # calculate SDNN for kubios
-                    if len(self.bpm_list) >= 2:
-                        squared_diff_sum = 0
-
-                        for i in range(len(self.bpm_list)):
-                            diff = self.bpm_list[i] - self.mean_interval
-                            squared_diff_sum += diff * diff
-
-                        mean_squared_diff = squared_diff_sum / len(self.bpm_list)
-                        self.sdnn_val = mean_squared_diff ** 0.5
-                    else:
-                        self.sdnn_val = 0
 
             self.last_beat_time = now
 
         self.prev_val = filtered_val
         return is_beat
+
+    def calculate_hrv_metrics(self):
+        self.collecting_30s = False
+        self.collection_complete = True
+
+        # calculate mean HR + mean PPI for kubios
+        if len(self.bpm_list) > 0:
+            self.mean_interval = sum(self.bpm_list) / len(self.bpm_list)
+            self.mean_hr = int(60000 / self.mean_interval)
+            print("Mean HR:", self.mean_hr, "Mean PPI:", self.mean_interval)
+        else:
+            self.mean_hr = 0
+            self.mean_interval = 0
+
+            # calculate RMSSD for kubios
+        if len(self.bpm_list) >= 2:
+            squared_diff_sum = 0
+            for i in range(len(self.bpm_list)-1):
+                diff = self.bpm_list[i+1] - self.bpm_list[i]
+                squared_diff_sum += diff * diff
+            mean_squared_diff = squared_diff_sum / (len(self.bpm_list) - 1)
+            self.rmssd_val = mean_squared_diff ** 0.5
+        else:
+            self.rmssd_val = 0
+
+            # calculate SDNN for kubios
+        if len(self.bpm_list) >= 2:
+            squared_diff_sum = 0
+            for i in range(len(self.bpm_list)):
+                diff = self.bpm_list[i] - self.mean_interval
+                squared_diff_sum += diff * diff
+            mean_squared_diff = squared_diff_sum / len(self.bpm_list)
+            self.sdnn_val = mean_squared_diff ** 0.5
+        else:
+            self.sdnn_val = 0

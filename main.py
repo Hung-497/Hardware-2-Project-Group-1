@@ -35,9 +35,11 @@ class Main:
                     if is_beat:
                         hw.led.toggle()
 
-            # Handle the network dispatch directly matched to the menu screen state
-            if getattr(menu, 'screen', '') == "hrv_send":
-                if not sent:
+            # after collecting send to kubios
+            if menu.screen == "hrv_send" and not sent:
+                processor.calculate_hrv_metrics()
+                if menu.menu_option == 4:
+                    print("send to Kubios")
                     try:
                         from mqtt import KubiosExample
                         mqtt_client = KubiosExample(
@@ -45,9 +47,7 @@ class Main:
                         mqtt_client.run()
                     except Exception as error:
                         print("kubios failed:", error)
-                    sent = True
-            else:
-                sent = False
+                sent = True
 
             # update measuring screen
             menu.update_display(processor.bpm)

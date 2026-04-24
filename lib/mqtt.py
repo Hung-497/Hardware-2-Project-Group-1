@@ -132,7 +132,7 @@ class KubiosExample:
         # Publish to Kubios
         self.latest_response = None
         request_payload = self.build_request_payload(real_mac)
-        print("Published to kubios/request")
+        print("Published to kubios/request", request_payload)
         client.publish(self.cfg.REQUEST_TOPIC, json.dumps(request_payload))
 
         start = time.ticks_ms()
