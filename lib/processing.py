@@ -137,6 +137,44 @@ class Processing:
 
             if self.collecting_30s:
                 self.bpm_list.append(interval)
+                # check 30s
+                if time.ticks_diff(now, self.collection_start) >= 30000:
+                    self.collecting_30s = False
+                    self.collection_complete = True
+
+                    # calculate mean HR + mean PPI for kubios
+                    if len(self.bpm_list) > 0:
+                        self.mean_interval = sum(self.bpm_list) / len(self.bpm_list)
+                        self.mean_hr = int(60000 / self.mean_interval)
+                    else:
+                        self.mean_hr = 0
+                        self.mean_interval = 0
+
+                    # calculate RMSSD for kubios
+                    if len(self.bpm_list) >= 2:
+                        squared_diff_sum = 0
+
+                        for i in range(len(self.bpm_list)-1):
+                            diff = self.bpm_list[i+1] - self.bpm_list[i]
+                            squared_diff_sum += diff * diff
+                        
+                        mean_squared_diff = squared_diff_sum / (len(self.bpm_list) - 1) 
+                        self.rmssd_val = mean_squared_diff ** 0.5
+                    else:
+                        self.rmssd_val = 0
+
+                    # calculate SDNN for kubios
+                    if len(self.bpm_list) >= 2:
+                        squared_diff_sum = 0
+
+                        for i in range(len(self.bpm_list)):
+                            diff = self.bpm_list[i] - self.mean_interval
+                            squared_diff_sum += diff * diff
+
+                        mean_squared_diff = squared_diff_sum / len(self.bpm_list)
+                        self.sdnn_val = mean_squared_diff ** 0.5
+                    else:
+                        self.sdnn_val = 0
 
             self.last_beat_time = now
 
