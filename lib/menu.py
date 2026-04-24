@@ -1,3 +1,5 @@
+from history import HistoryManager
+from user import UserSelect
 import json
 from config import Value
 from Rotary import Encoder
@@ -5,8 +7,7 @@ from hardware import hw
 import time
 import micropython
 micropython.alloc_emergency_exception_buf(200)
-from config import Value
-from processing import Processing
+
 
 class Menu:
     def __init__(self, processor):
@@ -35,6 +36,10 @@ class Menu:
         self.kubios_sns = None
         self.kubios_pns = None
 
+        self.user_manager = UserSelect()
+        self.history_manager = HistoryManager()
+        self.needs_history_load = False
+
         # rotary encoder
         self.rotary_encoder = Encoder(
             self.cfg.ENCODER_A_PIN, self.cfg.ENCODER_B_PIN)
@@ -57,9 +62,13 @@ class Menu:
                 elif self.menu_option == 3:
                     self.screen = "history"
                     self.measuring = False
+                    self.needs_history_load = True
                 elif self.menu_option == 4:
                     #can send to kubios now
                     self.screen = "hrv_ready"
+                    self.measuring = False
+                elif self.menu_option == 5:
+                    self.screen = "user_select"
                     self.measuring = False
 
             # HR screen
@@ -74,8 +83,22 @@ class Menu:
                 self.hrv_start_time = time.ticks_ms()
 
             # History screen
-            elif self.screen == "hitory":
+            elif self.screen == "history":
+                if self.history_manager.viewing_detail:
+                    self.history_manager.back_to_list()
+                elif self.history_manager.get_total_records() == 0:
+                    self.screen = "menu"
+                    self.measuring = False
+                elif self.history_manager.get_index() >= self.history_manager.get_total_records():
+                    # click back
+                    self.screen = "menu"
+                    self.measuring = False
+                else:
+                    self.history_manager.select_record()
+
+            elif self.screen == "user_select":
                 self.screen = "menu"
+                self.user_manager.confirm_selection()
                 self.measuring = False
 
             # Kubios screen
@@ -122,10 +145,22 @@ class Menu:
                 self.menu_option += steps
 
                 if self.menu_option < 1:
-                    self.menu_option = 4
-                elif self.menu_option > 4:
+                    self.menu_option = 5
+                elif self.menu_option > 5:
                     self.menu_option = 1
 
+                self.force_refresh = True
+
+        elif self.screen == "user_select":
+            steps = self.read_encoder()
+            if steps != 0:
+                self.user_manager.scroll(steps)
+                self.force_refresh = True
+
+        elif self.screen == "history":
+            steps = self.read_encoder()
+            if steps != 0:
+                self.history_manager.scroll(steps)
                 self.force_refresh = True
 
     def update_hrv_state(self):
@@ -150,40 +185,36 @@ class Menu:
                 self.measuring = False
                 self.force_refresh = True
 
-                try:
-                    from storage import Storage
-                    Storage().save_hrv_data()
-                except Exception as e:
-                    print("Error saving locally", e)
-
     def draw_menu(self):
         hw.oled.fill(0)
         hw.oled.text("MENU", 48, 0)
 
-        if self.menu_option == 1:
-            hw.oled.text("> 1. MEASURE HR", 0, 12)
-            hw.oled.text("  2. HRV ANALYSIS", 0, 24)
-            hw.oled.text("  3. History", 0, 36)
-            hw.oled.text("  4. Kubios", 0, 48)
+        options = ["1. MEASURE HR", "2. HRV ANALYSIS",
+                   "3. History", "4. Kubios", "5. User"]
+        for i, opt in enumerate(options):
+            y = 12 + (i * 10)
+            if self.menu_option == i + 1:
+                hw.oled.text(f"> {opt}", 0, y)
+            else:
+                hw.oled.text(f"  {opt}", 0, y)
 
-        elif self.menu_option == 2:
-            hw.oled.text("  1. MEASURE HR", 0, 12)
-            hw.oled.text("> 2. HRV ANALYSIS", 0, 24)
-            hw.oled.text("  3. History", 0, 36)
-            hw.oled.text("  4. Kubios", 0, 48)
+        hw.oled.show()
 
-        if self.menu_option == 3:
-            hw.oled.text("  1. MEASURE HR", 0, 12)
-            hw.oled.text("  2. HRV ANALYSIS", 0, 24)
-            hw.oled.text("> 3. History", 0, 36)
-            hw.oled.text("  4. Kubios", 0, 48)
+    def draw_user_select(self):
+        hw.oled.fill(0)
+        hw.oled.text("SELECT USER", 20, 0)
 
-        if self.menu_option == 4:
-            hw.oled.text("  1. MEASURE HR", 0, 12)
-            hw.oled.text("  2. HRV ANALYSIS", 0, 24)
-            hw.oled.text("  3. History", 0, 36)
-            hw.oled.text("> 4. Kubios", 0, 48)
+        names = self.user_manager.get_all_names()
+        idx = self.user_manager.get_index()
 
+        for i, name in enumerate(names):
+            y = 20 + (i * 12)
+            if idx == i:
+                hw.oled.text(f"> {name}", 20, y)
+            else:
+                hw.oled.text(f"  {name}", 20, y)
+
+        hw.oled.text("PRESS TO SELECT", 4, 54)
         hw.oled.show()
 
     def draw_basic_hr(self, current_bpm):
@@ -242,9 +273,48 @@ class Menu:
 
     def draw_history(self):
         hw.oled.fill(0)
-        hw.oled.text("HISTORY", 0, 36)
-        hw.oled.text("NO DATA YET", 20, 24)
-        hw.oled.text("PRESS TO BACK", 12, 54)
+        name = self.user_manager.get_current_name()
+        total = self.history_manager.get_total_records()
+
+        if total == 0:
+            hw.oled.text(f"HIST: {name}", 0, 0)
+            hw.oled.text("NO DATA YET", 20, 24)
+            hw.oled.text("PRESS TO BACK", 12, 54)
+        elif self.history_manager.viewing_detail:
+            record = self.history_manager.get_current_record()
+            idx = self.history_manager.get_index()
+            ts = record.get("local_timestamp", "")
+            hw.oled.text(f"REC {idx+1}: {ts}", 0, 0)
+            hw.oled.text(f"HR: {int(record.get('mean_hr', 0))}", 0, 14)
+            hw.oled.text(f"PPI:{int(record.get('mean_ppi', 0))}", 64, 14)
+            hw.oled.text(f"RMS:{int(record.get('rmssd', 0))}", 0, 26)
+            hw.oled.text(f"SDN:{int(record.get('sdnn', 0))}", 64, 26)
+            hw.oled.text(f"SNS:{record.get('sns', 0)}", 0, 38)
+            hw.oled.text(f"PNS:{record.get('pns', 0)}", 64, 38)
+            hw.oled.text("PRESS TO BACK", 12, 54)
+        else:
+            hw.oled.text(f"HIST: {name}", 0, 0)
+            idx = self.history_manager.get_index()
+            # total + back
+            items = total + 1
+            # show 4 items
+            start = max(0, idx - 1)
+            end = min(items, start + 4)
+            if end - start < 4:
+                start = max(0, end - 4)
+            for i in range(start, end):
+                y = 12 + ((i - start) * 11)
+                if i < total:
+                    r = self.history_manager.history_records[i]
+                    ts = r.get("local_timestamp", f"Rec {i+1}")
+                    label = f"{i+1}. {ts}"
+                else:
+                    label = "BACK"
+                if i == idx:
+                    hw.oled.text(f">{label}", 0, y)
+                else:
+                    hw.oled.text(f" {label}", 0, y)
+            hw.oled.text("PRESS TO SELECT", 8, 54)
         hw.oled.show()
 
     def draw_kubios(self):
@@ -269,6 +339,11 @@ class Menu:
 
     def update_display(self, current_bpm):
         now = time.ticks_ms()
+
+        if self.needs_history_load:
+            self.history_manager.load_data(
+                self.user_manager.get_current_name())
+            self.needs_history_load = False
 
         self.update_menu()
         self.update_hrv_state()
@@ -301,3 +376,6 @@ class Menu:
 
             elif self.screen == "kubios":
                 self.draw_kubios()
+
+            elif self.screen == "user_select":
+                self.draw_user_select()

@@ -19,6 +19,7 @@ class Main:
         while True:
             # Edge-detect the start of the measurement
             if menu.measuring and not was_measuring:
+                sent = False
                 processor.start_collection()
             was_measuring = menu.measuring
 
@@ -43,7 +44,7 @@ class Main:
                     try:
                         from mqtt import KubiosExample
                         mqtt_client = KubiosExample(
-                            processor.bpm_list, processor.bpm)
+                            processor.bpm_list, processor.bpm, patient_name=menu.user_manager.get_current_name())
                         mqtt_client.run()
                     except Exception as error:
                         print("kubios failed:", error)

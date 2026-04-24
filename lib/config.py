@@ -20,8 +20,11 @@ class Value:
         self.REQUEST_TOPIC = b"kubios/request"
         self.RESPONSE_TOPIC = b"kubios/response"
         self.OUTPUT_FILE = "kubios_response.json"
+        self.HISTORY_FILE = "history.json"
         self.TIMEOUT_MS = 15000
         self.DB_TOPIC = b"database/records/add"
         self.PATIENT_NAME = "Patient1"
+        self.PATIENT_NAMES = ["Hung", "Trung"]
+        self.current_patient = "Hung"
         self.PATIENT_REGISTER_TOPIC = b"database/patients/add"
         self.DB_RESPONSE_TOPIC = b"database/response"
