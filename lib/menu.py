@@ -7,7 +7,7 @@ from config import Value
 from processing import Processing
 
 class Menu:
-    def __init__(self):
+    def __init__(self, processor):
         self.measuring = False
         self.last_btn_press = 0
         hw.button.irq(handler=self.btn_handler,
@@ -26,7 +26,7 @@ class Menu:
         self.hrv_start_time = 0
 
         self.cfg = Value()
-        self.values = Processing()
+        self.values = processor
 
         # rotary encoder
         self.rotary_encoder = Encoder(self.cfg.ENCODER_A_PIN,self.cfg.ENCODER_B_PIN)
