@@ -4,6 +4,7 @@ import time
 import micropython
 micropython.alloc_emergency_exception_buf(200)
 from config import Value
+from processing import Processing
 
 class Menu:
     def __init__(self):
