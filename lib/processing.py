@@ -137,7 +137,7 @@ class Processing:
             if self.collecting_30s:
                 self.bpm_list.append(interval)
                 # check 30s
-                if time.ticks_diff(now, self.collection_start) >= 30000:
+                if time.ticks_diff(now, self.collection_start) >= 10000:
                     self.collecting_30s = False
                     self.collection_complete = True
 
@@ -145,6 +145,7 @@ class Processing:
                     if len(self.bpm_list) > 0:
                         self.mean_interval = sum(self.bpm_list) / len(self.bpm_list)
                         self.mean_hr = int(60000 / self.mean_interval)
+
                     else:
                         self.mean_hr = 0
                         self.mean_interval = 0
@@ -159,6 +160,7 @@ class Processing:
                         
                         mean_squared_diff = squared_diff_sum / (len(self.bpm_list) - 1) 
                         self.rmssd_val = mean_squared_diff ** 0.5
+
                     else:
                         self.rmssd_val = 0
 
@@ -172,6 +174,7 @@ class Processing:
 
                         mean_squared_diff = squared_diff_sum / len(self.bpm_list)
                         self.sdnn_val = mean_squared_diff ** 0.5
+
                     else:
                         self.sdnn_val = 0
 
