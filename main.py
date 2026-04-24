@@ -15,18 +15,23 @@ class Main:
         was_measuring = False
 
         sent = False
+        was_measuring = False
 
         while True:
-            # Edge-detect the start of the measurement
-            if menu.measuring and not was_measuring:
-                processor.start_collection()
-            was_measuring = menu.measuring
-
             if not menu.measuring:
                 # clear
                 while not sampler.empty():
                     sampler.get()
+                was_measuring = False
+
             else:
+                # Start the collecting
+                if not was_measuring:
+                    sent = False
+                    processor.start_collection()
+                    was_measuring = True
+
+                # Read from the ADC
                 while not sampler.empty():
                     val = sampler.get()
                     is_beat = processor.process_sample(val)
@@ -35,9 +40,10 @@ class Main:
                     if is_beat:
                         hw.led.toggle()
 
-            # Handle the network dispatch directly matched to the menu screen state
-            if getattr(menu, 'screen', '') == "hrv_send":
-                if not sent:
+            # after collecting send to kubios
+            if menu.screen == "hrv_send" and not sent:
+                if menu.menu_option == 4:
+                    print("send to Kubios")
                     try:
                         from mqtt import KubiosExample
                         mqtt_client = KubiosExample(
@@ -46,10 +52,12 @@ class Main:
                     except Exception as error:
                         print("kubios failed:", error)
                     sent = True
-            else:
-                sent = False
 
-            # update measuring screen
+                # clear Fifo
+                while not sampler.empty():
+                    sampler.get()
+
+            # update the display
             menu.update_display(processor.bpm)
 
 

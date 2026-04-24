@@ -1,9 +1,10 @@
+import json
+from config import Value
 from Rotary import Encoder
 from hardware import hw
 import time
 import micropython
 micropython.alloc_emergency_exception_buf(200)
-from config import Value
 
 
 class Menu:
@@ -32,8 +33,14 @@ class Menu:
         self.sdnn = 22
         self.cfg = Value()
 
+        self.kubios_hr = None
+        self.kubios_rmssd = None
+        self.kubios_sns = None
+        self.kubios_pns = None
+
         # rotary encoder
-        self.rotary_encoder = Encoder(self.cfg.ENCODER_A_PIN,self.cfg.ENCODER_B_PIN)
+        self.rotary_encoder = Encoder(
+            self.cfg.ENCODER_A_PIN, self.cfg.ENCODER_B_PIN)
 
     def btn_handler(self, pin):
         now = time.ticks_ms()
@@ -54,7 +61,8 @@ class Menu:
                     self.screen = "history"
                     self.measuring = False
                 elif self.menu_option == 4:
-                    self.screen = "kubios"
+                    #can send to kubios now
+                    self.screen = "hrv_ready"
                     self.measuring = False
 
             # HR screen
@@ -87,8 +95,22 @@ class Menu:
             else:
                 self.screen = "menu"
                 self.measuring = False
-            
+
             self.force_refresh = True
+
+    def load_kubios_data(self):
+        try:
+            with open(self.cfg.OUTPUT_FILE, 'r') as f:
+                data = json.load(f)
+            self.kubios_hr = round(data["data"]["analysis"]["mean_hr_bpm"], 1)
+            self.kubios_ppi = round(data["data"]["analysis"]["mean_rr_ms"], 1)
+            self.kubios_rmssd = round(data["data"]["analysis"]["rmssd_ms"], 1)
+            self.kubios_sdnn = round(data["data"]["analysis"]["sdnn_ms"], 1)
+            self.kubios_sns = round(data["data"]["analysis"]["sns_index"], 2)
+            self.kubios_pns = round(data["data"]["analysis"]["pns_index"], 2)
+        except Exception as e:
+            print("Error loading kubios data:", e)
+            self.kubios_hr = None
 
     def read_encoder(self):
         steps = 0
@@ -123,14 +145,17 @@ class Menu:
 
         elif self.screen == "hrv_send":
             if time.ticks_diff(now, self.hrv_start_time) >= 2000:
-                self.screen = "hrv_result"
+                if self.menu_option == 4:
+                    self.screen = "kubios"
+                    self.load_kubios_data()
+                else:
+                    self.screen = "hrv_result"
                 self.measuring = False
                 self.force_refresh = True
-                
+
                 try:
                     from storage import Storage
                     Storage().save_hrv_data()
-                    print("save history")
                 except Exception as e:
                     print("Error saving locally", e)
 
@@ -149,7 +174,7 @@ class Menu:
             hw.oled.text("> 2. HRV ANALYSIS", 0, 24)
             hw.oled.text("  3. History", 0, 36)
             hw.oled.text("  4. Kubios", 0, 48)
-        
+
         if self.menu_option == 3:
             hw.oled.text("  1. MEASURE HR", 0, 12)
             hw.oled.text("  2. HRV ANALYSIS", 0, 24)
@@ -227,16 +252,29 @@ class Menu:
 
     def draw_kubios(self):
         hw.oled.fill(0)
-        hw.oled.text("KUBIOS", 40, 0)
-        hw.oled.text("NO DATA YET", 12, 54)
-        hw.oled.text("PRESS TO BACK", 12, 54)
+        hw.oled.text("KUBIOS RESULT", 0, 0)
+
+        if self.kubios_hr is not None:
+            hw.oled.text(f"HR:{int(self.kubios_hr)}", 0, 14)
+            hw.oled.text(f"PPI:{int(self.kubios_ppi)}", 0, 26)
+            hw.oled.text(f"SNS:{self.kubios_sns}", 0, 38)
+
+            hw.oled.text(f"RMS:{int(self.kubios_rmssd)}", 64, 14)
+            hw.oled.text(f"SDN:{int(self.kubios_sdnn)}", 64, 26)
+            hw.oled.text(f"PNS:{self.kubios_pns}", 64, 38)
+
+            hw.oled.text("PRESS TO BACK", 12, 54)
+        else:
+            hw.oled.text("NO DATA YET", 12, 32)
+            hw.oled.text("PRESS TO BACK", 12, 54)
+
         hw.oled.show()
 
     def update_display(self, current_bpm):
         now = time.ticks_ms()
 
         self.update_menu()
-        self.update_hrv_state()11
+        self.update_hrv_state()
 
         # update screen
         if time.ticks_diff(now, self.last_ui_update) >= 80 or self.force_refresh:
@@ -260,7 +298,7 @@ class Menu:
 
             elif self.screen == "hrv_result":
                 self.draw_hrv_result()
-            
+
             elif self.screen == "history":
                 self.draw_history()
 
