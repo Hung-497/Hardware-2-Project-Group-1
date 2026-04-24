@@ -137,7 +137,7 @@ class Processing:
             if self.collecting_30s:
                 self.bpm_list.append(interval)
                 # check 30s
-                if time.ticks_diff(now, self.collection_start) >= 10000:
+                if time.ticks_diff(now, self.collection_start) >= 30000:
                     self.collecting_30s = False
                     self.collection_complete = True
 
