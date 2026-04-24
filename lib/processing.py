@@ -21,7 +21,7 @@ class Processing:
         self.sma_buffer = []
         self.SMA_WINDOW = 5
 
-        self.bpm_list = []
+        self.bpm_list = []  #store beat intervals for 30s collection
         self.collecting_30s = False
         self.collection_start = 0
         self.collection_complete = False
@@ -40,12 +40,12 @@ class Processing:
         self.collection_complete = False
         self.collection_start = time.ticks_ms()
 
+        # reset beat detection state when starting new collection
         self.mean_hr = 0
         self.mean_interval = 0
         self.rmssd_val = 0
         self.sdnn_val = 0
 
-        # reset beat detection state when starting new collection
         self.last_beat_time = None
         self.beat_intervals = Fifo(7, typecode='i')
         self.intervals_sum = 0
@@ -58,6 +58,7 @@ class Processing:
         self.threshold_up = None
         self.prev_val = 65535
 
+    # simple moving average filter
     def sma_update(self, buffer, sample):
         buffer.append(sample)
         if len(buffer) > self.SMA_WINDOW:
@@ -69,6 +70,7 @@ class Processing:
         is_beat = False
         self.sample_count += 1
 
+        # find min max
         if filtered_val < self.cur_min:
             self.cur_min = filtered_val
         if filtered_val > self.cur_max:
@@ -91,9 +93,11 @@ class Processing:
             self.cur_min = 65535
             self.cur_max = 0
 
+        # verify crossing the threshold
         if (self.threshold_up is not None and self.prev_val < self.threshold_up and filtered_val >= self.threshold_up):
             now = time.ticks_ms()
-
+            
+            # include the first beat
             if self.last_beat_time is None:
                 self.last_beat_time = now
                 self.prev_val = filtered_val
@@ -101,6 +105,7 @@ class Processing:
 
             interval = time.ticks_diff(now, self.last_beat_time)
 
+            # filter out invalid intervals (too short or too long)
             if interval < self.MIN_INTERVAL:
                 self.prev_val = filtered_val
                 return False
@@ -112,6 +117,7 @@ class Processing:
 
             is_beat = True
 
+            # keep moving avg of intervals inside the Fifo
             if self.intervals_count >= 6:
                 old_interval = self.beat_intervals.get()
                 self.intervals_sum -= old_interval
@@ -124,12 +130,14 @@ class Processing:
             mean_ppi = self.intervals_sum / self.intervals_count
             if mean_ppi > 0:
                 calculated_bpm = int(60000 / mean_ppi)
+                # check possibility
                 if 40 <= calculated_bpm <= 220:
                     self.bpm = calculated_bpm
 
             if self.collecting_30s:
                 self.bpm_list.append(interval)
-                if time.ticks_diff(now, self.collection_start) >= 30000:
+                # check 30s
+                if time.ticks_diff(now, self.collection_start) >= 10000:
                     self.collecting_30s = False
                     self.collection_complete = True
 
@@ -137,6 +145,7 @@ class Processing:
                     if len(self.bpm_list) > 0:
                         self.mean_interval = sum(self.bpm_list) / len(self.bpm_list)
                         self.mean_hr = int(60000 / self.mean_interval)
+                        print("Mean HR:", self.mean_hr, "Mean PPI:", self.mean_interval)
                     else:
                         self.mean_hr = 0
                         self.mean_interval = 0
