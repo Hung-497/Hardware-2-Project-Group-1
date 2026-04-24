@@ -4,6 +4,7 @@ import time
 import micropython
 micropython.alloc_emergency_exception_buf(200)
 from config import Value
+from processing import Processing
 
 
 class Menu:
@@ -25,12 +26,8 @@ class Menu:
         # time cho HRV
         self.hrv_start_time = 0
 
-        # just demo num, ignore it
-        self.mean_hr = 76
-        self.mean_ppi = 750
-        self.rmssd = 23
-        self.sdnn = 22
         self.cfg = Value()
+        self.values = Processing()
 
         # rotary encoder
         self.rotary_encoder = Encoder(self.cfg.ENCODER_A_PIN,self.cfg.ENCODER_B_PIN)
@@ -212,10 +209,10 @@ class Menu:
 
     def draw_hrv_result(self):
         hw.oled.fill(0)
-        hw.oled.text("MEAN HR: " + str(self.mean_hr), 0, 0)
-        hw.oled.text("MEAN PPI: " + str(self.mean_ppi), 0, 14)
-        hw.oled.text("RMSSD: " + str(self.rmssd), 0, 28)
-        hw.oled.text("SDNN: " + str(self.sdnn), 0, 42)
+        hw.oled.text("MEAN HR: " + str(self.values.mean_hr), 0, 0)
+        hw.oled.text("MEAN PPI: " + str(self.values.mean_interval), 0, 14)
+        hw.oled.text("RMSSD: " + str(self.values.rmssd_val), 0, 28)
+        hw.oled.text("SDNN: " + str(self.values.sdnn_val), 0, 42)
         hw.oled.show()
 
     def draw_history(self):
@@ -236,7 +233,7 @@ class Menu:
         now = time.ticks_ms()
 
         self.update_menu()
-        self.update_hrv_state()11
+        self.update_hrv_state()
 
         # update screen
         if time.ticks_diff(now, self.last_ui_update) >= 80 or self.force_refresh:
