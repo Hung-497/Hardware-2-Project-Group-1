@@ -11,7 +11,7 @@ class Main:
     def main():
         sampler = Sampling()
         processor = Processing()
-        menu = Menu()
+        menu = Menu(processor)
         was_measuring = False
 
         sent = False

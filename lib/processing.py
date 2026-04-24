@@ -96,7 +96,7 @@ class Processing:
         # verify crossing the threshold
         if (self.threshold_up is not None and self.prev_val < self.threshold_up and filtered_val >= self.threshold_up):
             now = time.ticks_ms()
-
+            
             # include the first beat
             if self.last_beat_time is None:
                 self.last_beat_time = now
@@ -137,7 +137,7 @@ class Processing:
             if self.collecting_30s:
                 self.bpm_list.append(interval)
                 # check 30s
-                if time.ticks_diff(now, self.collection_start) >= 30000:
+                if time.ticks_diff(now, self.collection_start) >= 10000:
                     self.collecting_30s = False
                     self.collection_complete = True
 
@@ -145,6 +145,7 @@ class Processing:
                     if len(self.bpm_list) > 0:
                         self.mean_interval = sum(self.bpm_list) / len(self.bpm_list)
                         self.mean_hr = int(60000 / self.mean_interval)
+                        print("Mean HR:", self.mean_hr, "Mean PPI:", self.mean_interval)
                     else:
                         self.mean_hr = 0
                         self.mean_interval = 0
