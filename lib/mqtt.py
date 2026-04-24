@@ -5,6 +5,7 @@ import ubinascii
 from umqtt.simple import MQTTClient
 
 from config import Value
+from processing import Processing
 
 
 class KubiosExample:
@@ -57,18 +58,24 @@ class KubiosExample:
         }
 
     def build_db_payload(self, mac_address):
+        #retrieve from processing
+        processor = Processing()
+        # read the file
+        with open(self.cfg.OUTPUT_FILE,'r') as file:
+            data = json.load(file)
         # note!!!! place the real data
         return {
             "mac": mac_address,
             "timestamp": time.time(),
-            "patient_id": getattr(self, "patient_id", 1),
-            "mean_ppi": 800.0,
-            "mean_hr": 70,
-            "rmssd": 35.0,
-            "sdnn": 50.0,
-            "sns": 1.234,
-            "pns": -1.234,
+            "patient_id": self.patient_id,
+            "mean_ppi": processor.mean_interval,
+            "mean_hr": data["data"]["analysis"]["mean_hr_bpm"],
+            "rmssd": data["data"]["analysis"]["rmssd_ms"],
+            "sdnn": data["data"]["analysis"]["sdnn_ms"],
+            "sns": data["data"]["analysis"]["sns_index"],
+            "pns": data["data"]["analysis"]["pns_index"],
         }
+        
 
     def save_json_to_pico(self, filename, data):
         with open(filename, "w") as file:
@@ -122,13 +129,6 @@ class KubiosExample:
                 print("Patient registered, ID:", self.patient_id)
                 break
 
-        # Publish payload
-        db_topic = self.cfg.DB_TOPIC
-        db_payload = self.build_db_payload(real_mac)
-        if db_payload:
-            client.publish(db_topic, json.dumps(db_payload))
-            print("Published to database:", db_payload)
-
         # Publish to Kubios
         self.latest_response = None
         request_payload = self.build_request_payload(real_mac)
@@ -145,6 +145,12 @@ class KubiosExample:
                 self.save_json_to_pico(
                     self.cfg.OUTPUT_FILE, self.latest_response)
                 print("Saved to file:", self.cfg.OUTPUT_FILE)
+                # Publish payload
+                db_topic = self.cfg.DB_TOPIC
+                db_payload = self.build_db_payload(real_mac)
+                if db_payload:
+                    client.publish(db_topic, json.dumps(db_payload))
+                    print("Published to database:", db_payload)
                 break
 
             if time.ticks_diff(time.ticks_ms(), start) > self.cfg.TIMEOUT_MS:
