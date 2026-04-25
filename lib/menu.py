@@ -229,7 +229,6 @@ class Menu:
             hw.oled.text(str(self.display_bpm) + " BPM ", 0, 0)
         else:
             hw.oled.text("CALCULATING... ", 0, 0)
-
         if disp is not None:
             disp.draw_graph(0, 10, 128, 54)
 
