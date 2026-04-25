@@ -35,6 +35,10 @@ class Main:
                 while not sampler.empty():
                     val = sampler.get()
                     is_beat = processor.process_sample(val)
+                    
+                     # update graph only in basic HR screen
+                    if menu.screen == "basic_hr":
+                        disp.add_sample(processor.prev_val)
 
                     # update graph only in basic HR screen
                     if menu.screen == "basic_hr":
