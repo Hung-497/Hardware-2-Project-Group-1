@@ -6,11 +6,10 @@ from storage import Storage
 from umqtt.simple import MQTTClient
 
 from config import Value
-from processing import Processing
 
 
 class KubiosExample:
-    def __init__(self, bpm_data, current_bpm=0, patient_name="Hung"):
+    def __init__(self, bpm_data, ppi, current_bpm=0, patient_name="Hung"):
         self.cfg = Value()
         self.bpm_data = bpm_data
         self.current_bpm = current_bpm
@@ -22,6 +21,7 @@ class KubiosExample:
         self.patient_name = patient_name
         self.local_time_db = None
         self.local_time_pico = None
+        self.values = ppi
 
     def mqtt_callback(self, topic, msg):
         if topic == self.cfg.RESPONSE_TOPIC:
@@ -66,7 +66,7 @@ class KubiosExample:
 
     def build_db_payload(self, mac_address):
         # retrieve from processing
-        processor = Processing()
+        print()
         # read the file
         with open(self.cfg.OUTPUT_FILE, 'r') as file:
             data = json.load(file)
@@ -76,7 +76,7 @@ class KubiosExample:
             "timestamp": int(self.local_time_db),
             "patient_name": self.patient_name,
             "patient_id": self.patient_id,
-            "mean_ppi": processor.mean_interval,
+            "mean_ppi": self.values.mean_interval,
             "mean_hr": data["data"]["analysis"]["mean_hr_bpm"],
             "rmssd": data["data"]["analysis"]["rmssd_ms"],
             "sdnn": data["data"]["analysis"]["sdnn_ms"],

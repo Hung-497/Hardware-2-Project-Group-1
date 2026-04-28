@@ -25,7 +25,7 @@ class Main:
                 sent = False
                 processor.start_collection()
                 disp.reset()
-            
+            was_measuring = menu.measuring
 
             if not menu.measuring:
                 # clear
@@ -35,8 +35,8 @@ class Main:
                 while not sampler.empty():
                     val = sampler.get()
                     is_beat = processor.process_sample(val)
-                    
-                     # update graph only in basic HR screen
+
+                    # update graph only in basic HR screen
                     if menu.screen == "basic_hr":
                         disp.add_sample(processor.prev_val)
 
@@ -52,7 +52,7 @@ class Main:
                     try:
                         from mqtt import KubiosExample
                         mqtt_client = KubiosExample(
-                            processor.bpm_list, processor.bpm, patient_name=menu.user_manager.get_current_name())
+                            bpm_data=processor.bpm_list, ppi=processor, current_bpm=processor.bpm, patient_name=menu.user_manager.get_current_name())
                         mqtt_client.run()
                     except Exception as error:
                         print("kubios failed:", error)
@@ -60,8 +60,6 @@ class Main:
 
             # update measuring screen
             menu.update_display(processor.bpm, disp)
-            
-            was_measuring = menu.measuring
 
 
 Main.main()
