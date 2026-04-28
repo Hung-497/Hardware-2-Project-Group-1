@@ -2,13 +2,15 @@ import json
 import time
 import network
 import ubinascii
+from storage import Storage
 from umqtt.simple import MQTTClient
 
 from config import Value
+from processing import Processing
 
 
 class KubiosExample:
-    def __init__(self, bpm_data, current_bpm=0):
+    def __init__(self, bpm_data, current_bpm=0, patient_name="Hung"):
         self.cfg = Value()
         self.bpm_data = bpm_data
         self.current_bpm = current_bpm
@@ -17,6 +19,9 @@ class KubiosExample:
         self.latest_response = None
         self.latest_db_response = None
         self.patient_id = None
+        self.patient_name = patient_name
+        self.local_time_db = None
+        self.local_time_pico = None
 
     def mqtt_callback(self, topic, msg):
         if topic == self.cfg.RESPONSE_TOPIC:
@@ -49,6 +54,9 @@ class KubiosExample:
         return ubinascii.hexlify(mac_bytes).decode().upper()
 
     def build_request_payload(self, mac_address):
+        t = time.localtime(time.time() + 3*3600)
+        self.local_time_db = f"{t[1]:02d}_{t[2]:02d}_{t[3]:02d}_{t[4]:02d}"
+        self.local_time_pico = f"{t[1]:02d}/{t[2]:02d}/{t[0]:04d} {t[3]:02d}:{t[4]:02d}"
         return {
             "mac": mac_address,
             "type": "RRI",
@@ -57,17 +65,23 @@ class KubiosExample:
         }
 
     def build_db_payload(self, mac_address):
+        # retrieve from processing
+        processor = Processing()
+        # read the file
+        with open(self.cfg.OUTPUT_FILE, 'r') as file:
+            data = json.load(file)
         # note!!!! place the real data
         return {
             "mac": mac_address,
-            "timestamp": time.time(),
-            "patient_id": getattr(self, "patient_id", 1),
-            "mean_ppi": 800.0,
-            "mean_hr": 70,
-            "rmssd": 35.0,
-            "sdnn": 50.0,
-            "sns": 1.234,
-            "pns": -1.234,
+            "timestamp": int(self.local_time_db),
+            "patient_name": self.patient_name,
+            "patient_id": self.patient_id,
+            "mean_ppi": processor.mean_interval,
+            "mean_hr": data["data"]["analysis"]["mean_hr_bpm"],
+            "rmssd": data["data"]["analysis"]["rmssd_ms"],
+            "sdnn": data["data"]["analysis"]["sdnn_ms"],
+            "sns": data["data"]["analysis"]["sns_index"],
+            "pns": data["data"]["analysis"]["pns_index"],
         }
 
     def save_json_to_pico(self, filename, data):
@@ -104,7 +118,7 @@ class KubiosExample:
         # Register Patient
         patient_payload = {
             "mac": real_mac,
-            "patient_name": self.cfg.PATIENT_NAME
+            "patient_name": self.patient_name
         }
 
         register_topic = self.cfg.PATIENT_REGISTER_TOPIC
@@ -122,13 +136,6 @@ class KubiosExample:
                 print("Patient registered, ID:", self.patient_id)
                 break
 
-        # Publish payload
-        db_topic = self.cfg.DB_TOPIC
-        db_payload = self.build_db_payload(real_mac)
-        if db_payload:
-            client.publish(db_topic, json.dumps(db_payload))
-            print("Published to database:", db_payload)
-
         # Publish to Kubios
         self.latest_response = None
         request_payload = self.build_request_payload(real_mac)
@@ -145,6 +152,18 @@ class KubiosExample:
                 self.save_json_to_pico(
                     self.cfg.OUTPUT_FILE, self.latest_response)
                 print("Saved to file:", self.cfg.OUTPUT_FILE)
+                # Publish payload
+                db_topic = self.cfg.DB_TOPIC
+                db_payload = self.build_db_payload(real_mac)
+                if db_payload:
+                    client.publish(db_topic, json.dumps(db_payload))
+                    print("Published to database:", db_payload)
+                    # add localtime only in local
+                    db_payload["local_timestamp"] = self.local_time_pico
+                    try:
+                        Storage().save_hrv_data(db_payload)
+                    except Exception as e:
+                        print("Failed local:", e)
                 break
 
             if time.ticks_diff(time.ticks_ms(), start) > self.cfg.TIMEOUT_MS:
