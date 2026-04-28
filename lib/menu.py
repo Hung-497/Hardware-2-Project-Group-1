@@ -217,7 +217,7 @@ class Menu:
         hw.oled.text("PRESS TO SELECT", 4, 54)
         hw.oled.show()
 
-    def draw_basic_hr(self, current_bpm):
+    def draw_basic_hr(self, current_bpm, disp):
         self.display_bpm = current_bpm
         self.anime_tick += 1
         frames = ["^_^", "-_-", "^_^", "^_-"]
@@ -226,12 +226,13 @@ class Menu:
         hw.oled.fill(0)
 
         if self.display_bpm > 0:
-            hw.oled.text(str(self.display_bpm) + " BPM " + anime_char, 20, 20)
+            hw.oled.text(str(self.display_bpm) + " BPM ", 0, 0)
         else:
-            hw.oled.text("CALCULATING " + anime_char, 8, 20)
+            hw.oled.text("CALCULATING... ", 0, 0)
+        
+        if disp is not None:
+            disp.draw_graph(0, 10, 128, 54)
 
-        hw.oled.text("PRESS BUTTON", 12, 42)
-        hw.oled.text("TO STOP", 32, 54)
         hw.oled.show()
 
     def draw_hrv_ready(self):
@@ -337,7 +338,7 @@ class Menu:
 
         hw.oled.show()
 
-    def update_display(self, current_bpm):
+    def update_display(self, current_bpm, disp=None):
         now = time.ticks_ms()
 
         if self.needs_history_load:
@@ -357,7 +358,7 @@ class Menu:
                 self.draw_menu()
 
             elif self.screen == "basic_hr":
-                self.draw_basic_hr(current_bpm)
+                self.draw_basic_hr(current_bpm, disp)
 
             elif self.screen == "hrv_ready":
                 self.draw_hrv_ready()
