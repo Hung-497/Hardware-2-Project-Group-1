@@ -40,7 +40,7 @@ iMuha is a health prototype that measures heart rate and performs Heart Rate Var
    
 2. Clone the repository.
    ```bash
-   git clone https://github.com/Hung-497/Hardware-2-Project-Group-1.git
+   git clone --recurse-submodules https://github.com/Hung-497/Hardware-2-Project-Group-1.git
    ```
    
 3. [Optional] Configure settings:
