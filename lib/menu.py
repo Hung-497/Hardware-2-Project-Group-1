@@ -308,13 +308,12 @@ class Menu:
                 if i < total:
                     r = self.history_manager.history_records[i]
                     ts = r.get("local_timestamp", f"Rec {i+1}")
-                    label = f"{i+1}. {ts}"
                 else:
-                    label = "BACK"
+                    ts = "BACK"
                 if i == idx:
-                    hw.oled.text(f">{label}", 0, y)
+                    hw.oled.text(f">{ts}", 0, y)
                 else:
-                    hw.oled.text(f" {label}", 0, y)
+                    hw.oled.text(f" {ts}", 0, y)
             hw.oled.text("PRESS TO SELECT", 8, 54)
         hw.oled.show()
 

@@ -56,7 +56,7 @@ class KubiosExample:
     def build_request_payload(self, mac_address):
         t = time.localtime(time.time() + 3*3600)
         self.local_time_db = f"{t[1]:02d}_{t[2]:02d}_{t[3]:02d}_{t[4]:02d}"
-        self.local_time_pico = f"{t[1]:02d}/{t[2]:02d}/{t[0]:04d} {t[3]:02d}:{t[4]:02d}"
+        self.local_time_pico = f"{t[1]:02d}.{t[2]:02d}.{str(t[0])[2:]} {t[3]:02d}:{t[4]:02d}"
         return {
             "mac": mac_address,
             "type": "RRI",
