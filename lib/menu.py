@@ -268,8 +268,8 @@ class Menu:
         hw.oled.fill(0)
         hw.oled.text("MEAN HR: " + str(self.values.mean_hr), 0, 0)
         hw.oled.text("MEAN PPI: " + str(self.values.mean_interval), 0, 14)
-        hw.oled.text("RMSSD: " + str(round(self.values.rmssd_val, 3)), 0, 28)
-        hw.oled.text("SDNN: " + str(round(self.values.sdnn_val, 3)), 0, 42)
+        hw.oled.text("RMSSD: " + str(round(self.values.rmssd_val, 2)), 0, 28)
+        hw.oled.text("SDNN: " + str(round(self.values.sdnn_val, 2)), 0, 42)
         hw.oled.show()
 
     def draw_history(self):
@@ -290,8 +290,8 @@ class Menu:
             hw.oled.text(f"PPI:{int(record.get('mean_ppi', 0))}", 64, 14)
             hw.oled.text(f"RMS:{int(record.get('rmssd', 0))}", 0, 26)
             hw.oled.text(f"SDN:{int(record.get('sdnn', 0))}", 64, 26)
-            hw.oled.text(f"SNS:{round(record.get('sns', 0), 3)}", 0, 38)
-            hw.oled.text(f"PNS:{round(record.get('pns', 0), 3)}", 64, 38)
+            hw.oled.text(f"SNS:{round(record.get('sns', 0), 2)}", 0, 38)
+            hw.oled.text(f"PNS:{round(record.get('pns', 0), 2)}", 64, 38)
             hw.oled.text("PRESS TO BACK", 12, 54)
         else:
             hw.oled.text(f"HIST: {name}", 0, 0)
