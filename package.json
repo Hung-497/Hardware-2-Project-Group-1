@@ -17,7 +17,9 @@
     ["/lib/led.py", "http://localhost:8000/lib/led.py"],
     ["/lib/piotimer.py", "http://localhost:8000/lib/piotimer.py"],
     ["/lib/ssd1306.mpy", "http://localhost:8000/lib/ssd1306.mpy"],
-    ["/lib/umqtt/simple.mpy", "http://localhost:8000/lib/umqtt/simple.mpy"]
+    ["/lib/umqtt/simple.mpy", "http://localhost:8000/lib/umqtt/simple.mpy"],
+    ["/lib/logo_animation.py", "http://localhost:8000/lib/logo_animation.py"],
+    ["/lib/logo.py", "http://localhost:8000/lib/logo.py"]
   ],
   "deps": [],
   "version": "0.1.0"
