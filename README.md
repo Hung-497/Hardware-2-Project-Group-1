@@ -38,12 +38,12 @@ iMuha is a health prototype that measures heart rate and performs Heart Rate Var
    python -m pip install mpremote
    ```
    
-3. Clone the repository.
+2. Clone the repository.
    ```bash
    git clone https://github.com/Hung-497/Hardware-2-Project-Group-1.git
    ```
    
-4. [Optional] Configure settings:
+3. [Optional] Configure settings:
 - Edit the **/lib/config.py** to set up the WiFi: `SSID`, `PASSWORD`, and `BROKER_IP`.
 - If you have different pins than the ones specified in the hardware setup, open **/lib/hardware.py** and modify the parameters in **__init__**.
 
@@ -59,16 +59,7 @@ iMuha is a health prototype that measures heart rate and performs Heart Rate Var
    cd Hardware-2-Project-Group-1 && .\install.cmd
    ```
    
-6. Connect your Raspberry Pi Pico W and check the device name.
-   ```bash
-   mpremote connect list
-   ```
-7. Upload the project to the Pico.
-   ```bash
-   python -m mpremote connect <device name> cp main.py :/main.py
-   python -m mpremote connect <device name> cp -r ./lib/ :/lib/
-   ```
-8. Restart your Raspberry Pi Pico W.
+5. Restart your Raspberry Pi Pico W.
 
 ## Usage
 Complete the [Installation](#installation) and the device should be ready to use.

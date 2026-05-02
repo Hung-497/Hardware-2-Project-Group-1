@@ -1,0 +1,24 @@
+{
+  "urls": [
+    ["/main.py", "http://localhost:8000/main.py"],
+    ["/lib/config.py", "http://localhost:8000/lib/config.py"],
+    ["/lib/display.py", "http://localhost:8000/lib/display.py"],
+    ["/lib/hardware.py", "http://localhost:8000/lib/hardware.py"],
+    ["/lib/history.py", "http://localhost:8000/lib/history.py"],
+    ["/lib/menu.py", "http://localhost:8000/lib/menu.py"],
+    ["/lib/mqtt.py", "http://localhost:8000/lib/mqtt.py"],
+    ["/lib/processing.py", "http://localhost:8000/lib/processing.py"],
+    ["/lib/Rotary.py", "http://localhost:8000/lib/Rotary.py"],
+    ["/lib/sampling.py", "http://localhost:8000/lib/sampling.py"],
+    ["/lib/storage.py", "http://localhost:8000/lib/storage.py"],
+    ["/lib/user.py", "http://localhost:8000/lib/user.py"],
+    ["/lib/fifo.py", "http://localhost:8000/lib/fifo.py"],
+    ["/lib/filefifo.py", "http://localhost:8000/lib/filefifo.py"],
+    ["/lib/led.py", "http://localhost:8000/lib/led.py"],
+    ["/lib/piotimer.py", "http://localhost:8000/lib/piotimer.py"],
+    ["/lib/ssd1306.py", "http://localhost:8000/lib/ssd1306.py"],
+    ["/lib/umqtt/simple.py", "http://localhost:8000/lib/umqtt/simple.py"]
+  ],
+  "deps": [],
+  "version": "0.1"
+}
