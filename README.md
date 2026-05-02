@@ -41,8 +41,8 @@ iMuha is a health prototype that measures heart rate and performs Heart Rate Var
    python -m mpremote connect <device name> cp main.py :/main.py
    python -m mpremote connect <device name> cp -r ./lib/ :/lib/
    ```
-4. • edit the /lib/config.py to setup the WiFi: **SSID** and **PASSWORD** and **BROKER_IP**
-   • If you have the different pins than the spicified in the hardware setup, open /lib/hardware.py       and modify the parameters in **__init__**.
+4. - edit the /lib/config.py to setup the WiFi: `SSID` and `PASSWORD` and `BROKER_IP`
+   - If you have the different pins than the spicified in the hardware setup, open /lib/hardware.py       and modify the parameters in **__init__**.
 ## Usage
 Complete the [Installation](#installation) and restart the Raspberry Pi Pico W and the device should be ready to use.
 
