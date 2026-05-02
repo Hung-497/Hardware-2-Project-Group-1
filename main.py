@@ -3,6 +3,7 @@ from processing import Processing
 from menu import Menu
 from hardware import hw
 from display import Display
+from logo_animation import Logo
 import micropython
 
 
@@ -11,6 +12,8 @@ micropython.alloc_emergency_exception_buf(200)
 
 class Main:
     def main():
+        # start the animation
+        Logo(hw.button)
         sampler = Sampling()
         processor = Processing()
         menu = Menu(processor)
