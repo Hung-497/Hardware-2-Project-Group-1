@@ -26,9 +26,11 @@ def Logo(button):
     # freeze the full logo for 1 sec
     time.sleep_ms(1000)
 
-    # blink the press to start text
+    # blink the hold to start text
     blink = True
     last_blink = time.ticks_ms()
+    btn_press = 0
+    btn_held = False
 
     while True:
         now = time.ticks_ms()
@@ -42,20 +44,21 @@ def Logo(button):
             oled.fill(0)
             oled.blit(logo_fb, 0, 0)
 
-            # draw press to start txt
+            # draw hold to start txt
             if blink:
-                oled.text("PRESS TO START", 8, 54)
+                oled.text("HOLD TO START", 12, 54)
 
             oled.show()
 
-        # check if button
+        # check if button held for 500ms
         if button.value() == 0:
-            # Debounce
-            time.sleep_ms(200)
-            if button.value() == 0:
+            if not btn_held:
+                btn_held = True
+                btn_press = now
+            elif time.ticks_diff(now, btn_press) >= 500:
                 break
-        #buffer btw each loop            
-        time.sleep_ms(50)
+        else:
+            btn_held = False
 
     # clear the screen
     oled.fill(0)
