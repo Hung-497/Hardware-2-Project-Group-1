@@ -68,8 +68,8 @@ class Display:
             self.new_values.append(y)
             
             # keep only 128 points, one per pixel column on OLED
-            if len(self.new_values) > 128:
-                self.new_values == self.new_values[-128:]
+            while len(self.new_values) > 128:
+                self.new_values.pop(0)
                 
             # reset for next 5 samples
             self.current_group = []
