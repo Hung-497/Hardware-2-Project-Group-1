@@ -6,15 +6,10 @@ from storage import Storage
 from umqtt.simple import MQTTClient
 
 from config import Value
-from processing import Processing
 
 
 class KubiosExample:
-<<<<<<< HEAD
     def __init__(self, bpm_data, ppi, current_bpm=0, patient_name="Hung"):
-=======
-    def __init__(self, bpm_data, current_bpm=0, patient_name="Hung"):
->>>>>>> ca25b43fce3bf1ca1c95098db9a7d76fac7ea36a
         self.cfg = Value()
         self.bpm_data = bpm_data
         self.current_bpm = current_bpm
@@ -26,10 +21,7 @@ class KubiosExample:
         self.patient_name = patient_name
         self.local_time_db = None
         self.local_time_pico = None
-<<<<<<< HEAD
         self.values = ppi
-=======
->>>>>>> ca25b43fce3bf1ca1c95098db9a7d76fac7ea36a
 
     def mqtt_callback(self, topic, msg):
         if topic == self.cfg.RESPONSE_TOPIC:

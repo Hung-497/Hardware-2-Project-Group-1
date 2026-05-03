@@ -22,7 +22,7 @@ class HistoryManager:
                 self.history_records.reverse()
 
     def scroll(self, steps):
-        if steps != 0 and len(self.history_records) > 0:
+        if steps != 0 and len(self.history_records) > 0 and not self.viewing_detail:
             self.history_index -= steps
             if self.history_index < 0:
                 self.history_index = 0
