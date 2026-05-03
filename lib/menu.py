@@ -4,6 +4,7 @@ import json
 from config import Value
 from Rotary import Encoder
 from hardware import hw
+from user_animation import user_change_animation
 import time
 import micropython
 micropython.alloc_emergency_exception_buf(200)
@@ -97,9 +98,9 @@ class Menu:
                     self.history_manager.select_record()
 
             elif self.screen == "user_select":
-                self.screen = "menu"
                 self.user_manager.confirm_selection()
                 self.measuring = False
+                self.screen = "user_animation"
 
             # Kubios screen
             elif self.screen == "kubios":
@@ -379,3 +380,8 @@ class Menu:
 
             elif self.screen == "user_select":
                 self.draw_user_select()
+
+            elif self.screen == "user_animation":
+                user_change_animation()
+                self.screen = "menu"
+                self.force_refresh = True
