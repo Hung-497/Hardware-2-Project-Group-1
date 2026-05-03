@@ -6,6 +6,8 @@ from Rotary import Encoder
 from hardware import hw
 from user_animation import user_change_animation
 import time
+import framebuf
+import hr_countdown_5frames_vlsb as countdown
 import micropython
 micropython.alloc_emergency_exception_buf(200)
 
@@ -21,6 +23,9 @@ class Menu:
         self.display_bpm = 0
         self.force_refresh = True
         self.anime_tick = 0
+
+        # set start time cho countdown screen
+        self.countdown_start_time = 0
 
         # menu, measure = 1, data = 2, history n kubios should be 3 n 4 but will add later
         self.screen = "menu"
@@ -55,8 +60,9 @@ class Menu:
             # menu screen
             if self.screen == "menu":
                 if self.menu_option == 1:
-                    self.screen = "basic_hr"
+                    self.screen = "basic_countdown"
                     self.measuring = True
+                    self.countdown_start_time = time.ticks_ms()
                 elif self.menu_option == 2:
                     self.screen = "hrv_ready"
                     self.measuring = False
@@ -79,7 +85,7 @@ class Menu:
 
             # HRV screen
             elif self.screen == "hrv_ready":
-                self.screen = "hrv_collect"
+                self.screen = "hrv_loading"
                 self.measuring = True
                 self.hrv_start_time = time.ticks_ms()
 
@@ -167,8 +173,7 @@ class Menu:
     def update_hrv_state(self):
         now = time.ticks_ms()
 
-        # demo time
-        if self.screen == "hrv_collect":
+        if self.screen == "hrv_loading":
 
             if time.ticks_diff(now, self.hrv_start_time) >= 30000:
                 self.screen = "hrv_send"
@@ -236,6 +241,27 @@ class Menu:
 
         hw.oled.show()
 
+    def draw_basic_countdown(self):
+        now = time.ticks_ms()
+        elapsed = time.ticks_diff(now, self.countdown_start_time)
+
+        frame_index = elapsed // 1000 #each frames will last 1 sec
+
+        if frame_index >= countdown.FRAME_COUNT:
+            frame_index = countdown.FRAME_COUNT - 1
+
+        buf = framebuf.FrameBuffer(
+            countdown.get_frame(frame_index),
+            countdown.WIDTH,
+            countdown.HEIGHT,
+            framebuf.MONO_VLSB
+    )
+
+        hw.oled.fill(0)
+        hw.oled.blit(buf, 0, 0)
+        hw.oled.show()
+
+
     def draw_hrv_ready(self):
         hw.oled.fill(0)
         hw.oled.text("START MEASUREMENT", 0, 0)
@@ -245,15 +271,34 @@ class Menu:
         hw.oled.text("TO START", 20, 54)
         hw.oled.show()
 
-    def draw_hrv_collect(self):
-        self.anime_tick += 1
-        frames = [".", "..", "..."]
-        dots = frames[self.anime_tick % len(frames)]
+    def draw_loading_bar(self, title, passed_time, total_time):
+        if passed_time > total_time:
+            passed_time = total_time
+
+        percentage = int((passed_time * 100) / total_time)
+
+        box_x = 4
+        box_y = 30
+        box_width = 120
+        box_height = 10
+
+        fill_width = int((passed_time * box_width) / total_time)
 
         hw.oled.fill(0)
-        hw.oled.text("COLLECTING DATA", 0, 20)
-        hw.oled.text(dots, 50, 36)
+        hw.oled.text(title, 20, 12)
+
+        hw.oled.rect(box_x, box_y, box_width, box_height, 1)
+
+        if fill_width > 0:
+            hw.oled.fill_rect(box_x, box_y, fill_width, box_height, 1)
+
+        hw.oled.text(str(percentage) + "%", 50, 46)
         hw.oled.show()
+
+    def draw_hrv_loading(self):
+        now = time.ticks_ms()
+        elapsed = time.ticks_diff(now, self.hrv_start_time)
+        self.draw_loading_bar("LOADING...", elapsed, 30000)
 
     def draw_hrv_send(self):
         self.anime_tick += 1
@@ -338,6 +383,14 @@ class Menu:
 
         hw.oled.show()
 
+    def update_basic_countdown(self):
+        now = time.ticks_ms()
+
+        if self.screen == "basic_countdown":
+            if time.ticks_diff(now, self.countdown_start_time) >= 5000:
+                self.screen = "basic_hr"
+                self.force_refresh = True
+
     def update_display(self, current_bpm, disp=None):
         now = time.ticks_ms()
 
@@ -348,6 +401,7 @@ class Menu:
 
         self.update_menu()
         self.update_hrv_state()
+        self.update_basic_countdown()
 
         # update screen
         if time.ticks_diff(now, self.last_ui_update) >= 80 or self.force_refresh:
@@ -357,14 +411,17 @@ class Menu:
             if self.screen == "menu":
                 self.draw_menu()
 
+            elif self.screen == "basic_countdown":
+                self.draw_basic_countdown()
+
             elif self.screen == "basic_hr":
                 self.draw_basic_hr(current_bpm, disp)
 
             elif self.screen == "hrv_ready":
                 self.draw_hrv_ready()
 
-            elif self.screen == "hrv_collect":
-                self.draw_hrv_collect()
+            elif self.screen == "hrv_loading":
+                self.draw_hrv_loading()
 
             elif self.screen == "hrv_send":
                 self.draw_hrv_send()

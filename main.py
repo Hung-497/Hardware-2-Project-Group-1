@@ -40,7 +40,7 @@ class Main:
                     is_beat = processor.process_sample(val)
 
                     # update graph only in basic HR screen
-                    if menu.screen == "basic_hr":
+                    if menu.screen == "basic_countdown" or menu.screen == "basic_hr":
                         disp.add_sample(processor.prev_val)
 
                     # if heart beats, toggle led
