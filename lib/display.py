@@ -1,4 +1,7 @@
 from hardware import hw
+from fifo import Fifo
+import micropython
+micropython.alloc_emergency_exception_buf(200)
 
 
 class Display:
@@ -7,7 +10,7 @@ class Display:
         self.reset()
 
     def reset(self):
-        self.prev_block = []
+        self.prev_block = Fifo(250,typecode='h')
         
         # collect 5 samples at a time n cal its mean into 1 graph point
         self.current_group = []
@@ -34,9 +37,9 @@ class Display:
         sample = int(sample)
         
         # if buffer is damn like too long, keep only last 250 samples
-        self.prev_block.append(sample)
-        if len(self.prev_block) > 250:
-            self.prev_block == self.prev_block[-250:]
+        self.prev_block.put(sample)
+        if not self.prev_block.empty():
+            self.prev_block.get()
 
         # try to update copy of min/max from processor
         self.update_min_max()
