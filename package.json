@@ -1,7 +1,7 @@
 {
   "urls": [
     ["/main.py", "http://localhost:8000/main.py"],
-    ["/history.json", "http://localhost:8000/history.json"],
+    ["/lib/history.json", "http://localhost:8000/lib/history.json"],
     ["/lib/config.py", "http://localhost:8000/lib/config.py"],
     ["/lib/display.py", "http://localhost:8000/lib/display.py"],
     ["/lib/hardware.py", "http://localhost:8000/lib/hardware.py"],
