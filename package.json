@@ -1,6 +1,7 @@
 {
   "urls": [
     ["/main.py", "http://localhost:8000/main.py"],
+    ["/history.json", "http://localhost:8000/history.json"],
     ["/lib/config.py", "http://localhost:8000/lib/config.py"],
     ["/lib/display.py", "http://localhost:8000/lib/display.py"],
     ["/lib/hardware.py", "http://localhost:8000/lib/hardware.py"],
@@ -22,7 +23,7 @@
     ["/lib/logo.py", "http://localhost:8000/lib/logo.py"],
     ["/lib/hr_countdown_5frames_vlsb.py", "http://localhost:8000/lib/hr_countdown_5frames_vlsb.py"],
     ["/lib/senjougahara.py", "http://localhost:8000/lib/senjougahara.py"],
-    ["/lib/user_animation.py", "http://localhost:8000/lib/user_animation.py"  ]
+    ["/lib/user_animation.py", "http://localhost:8000/lib/user_animation.py"]
   ],
   "deps": [],
   "version": "0.1.0"
