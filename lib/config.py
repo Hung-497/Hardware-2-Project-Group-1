@@ -27,4 +27,6 @@ class Value:
         self.PATIENT_NAMES = ["Hung", "Trung"]
         self.current_patient = "Hung"
         self.PATIENT_REGISTER_TOPIC = b"database/patients/add"
+        self.DEVICE_REGISTER_TOPIC = b"database/devices/add"
+        self.DEVICE_NAME = "iMuha"
         self.DB_RESPONSE_TOPIC = b"database/response"

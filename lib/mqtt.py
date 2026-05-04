@@ -70,7 +70,6 @@ class KubiosExample:
         # read the file
         with open(self.cfg.OUTPUT_FILE, 'r') as file:
             data = json.load(file)
-        # note!!!! place the real data
         return {
             "mac": mac_address,
             "timestamp": int(self.local_time_db),
@@ -115,7 +114,28 @@ class KubiosExample:
         client.subscribe(self.cfg.RESPONSE_TOPIC)
         client.subscribe(self.cfg.DB_RESPONSE_TOPIC)
 
+        # register device
+        self.latest_db_response = None
+        device_payload = {
+            "mac": real_mac,
+            "device_name": self.cfg.DEVICE_NAME
+        }
+        print("Registering device to:", self.cfg.DEVICE_REGISTER_TOPIC)
+        client.publish(self.cfg.DEVICE_REGISTER_TOPIC, json.dumps(device_payload))
+
+        start = time.ticks_ms()
+        while True:
+            client.check_msg()
+            if self.latest_db_response is not None:
+                if self.latest_db_response.get("mac") == real_mac:
+                    print("Device added:", json.dumps(self.latest_db_response))
+                    break
+            if time.ticks_diff(time.ticks_ms(), start) > self.cfg.TIMEOUT_MS:
+                print("cannot add")
+                break
+
         # Register Patient
+        self.latest_db_response = None
         patient_payload = {
             "mac": real_mac,
             "patient_name": self.patient_name
